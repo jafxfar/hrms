@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Date, Float, Enum, Text, Boolean, Numeric
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Date, Float, Enum, Text, Boolean, Numeric, LargeBinary
 from sqlalchemy.orm import relationship
 from ..database import Base
 from datetime import datetime
@@ -46,37 +46,38 @@ class Department(Base):
     
     department_id = Column(Integer, primary_key=True, index=True)
     title = Column(String(100), nullable=False)
-    description = Column(Text)
+    description = Column(Text, nullable=True)  # Explicitly make it nullable
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    employees = relationship("Employee", back_populates="department")
-    designations = relationship("Designation", back_populates="department")
-    jobs = relationship("Job", back_populates="department")
+    employees = relationship("Employee", back_populates="department", cascade="all, delete")
+    positions = relationship("Position", back_populates="department", cascade="all, delete")
 
-class Designation(Base):
-    __tablename__ = "designations"
+# Remove entire Designation class
+
+class Position(Base):
+    __tablename__ = "positions"
     
-    designation_id = Column(Integer, primary_key=True, index=True)
+    position_id = Column(Integer, primary_key=True, index=True)  # Changed from designation_id
     title = Column(String(100), nullable=False)
     department_id = Column(Integer, ForeignKey("departments.department_id"))
     description = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    department = relationship("Department", back_populates="designations")
-    employees = relationship("Employee", back_populates="designation")
-
-class Position(Base):
-    __tablename__ = "positions"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
-    salary_range_min = Column(Float)
-    salary_range_max = Column(Float)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
+    department = relationship("Department", back_populates="positions")
     employees = relationship("Employee", back_populates="position")
+
+class EmployeeDocument(Base):
+    __tablename__ = "employee_documents"
+    
+    document_id = Column(Integer, primary_key=True, index=True)
+    employee_id = Column(Integer, ForeignKey("employees.employee_id"))
+    document_type = Column(String(50), nullable=False)
+    document_path = Column(String(255), nullable=False)
+    uploaded_at = Column(DateTime, default=datetime.utcnow)
+    
+    employee = relationship("Employee", back_populates="documents")
 
 class Employee(Base):
     __tablename__ = "employees"
@@ -94,7 +95,7 @@ class Employee(Base):
     employment_type = Column(Enum(EmploymentType))
     work_type = Column(Enum(WorkType))
     department_id = Column(Integer, ForeignKey("departments.department_id"))
-    designation_id = Column(Integer, ForeignKey("designations.designation_id"))
+    position_id = Column(Integer, ForeignKey("positions.position_id"))  # Updated to match new column name
     working_days = Column(String(20))
     join_date = Column(Date)
     ctc = Column(Numeric(12, 2))
@@ -103,16 +104,14 @@ class Employee(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Update relationships
     department = relationship("Department", back_populates="employees")
-    designation = relationship("Designation", back_populates="employees")
-    documents = relationship("EmployeeDocument", back_populates="employee")
-    attendance_records = relationship("Attendance", back_populates="employee")
-    leaves = relationship("Leave", back_populates="employee")
-    payroll_records = relationship("Payroll", back_populates="employee")
-    history_records = relationship("EmployeeHistory", back_populates="employee")
-    reviews_received = relationship("PerformanceReview", back_populates="employee", foreign_keys="PerformanceReview.employee_id")
-    reviews_given = relationship("PerformanceReview", back_populates="reviewer", foreign_keys="PerformanceReview.reviewer_id")
+    position = relationship("Position", back_populates="employees")
+    documents = relationship("EmployeeDocument", back_populates="employee", cascade="all, delete")  # Changed from Document to EmployeeDocument
+    # Removed designation relationship
 
+# Optional: If you're not using the Document model, you can remove it
+# If you are using it, update its relationship
 class Document(Base):
     __tablename__ = "documents"
     
@@ -122,7 +121,7 @@ class Document(Base):
     number = Column(String)
     issue_date = Column(Date)
     expiry_date = Column(Date)
-    employee_id = Column(Integer, ForeignKey("employees.id"))
+    employee_id = Column(Integer, ForeignKey("employees.employee_id"))
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    employee = relationship("Employee", back_populates="documents")
+    employee = relationship("Employee")  # Remove back_populates here

@@ -1,10 +1,12 @@
+import logging
 from fastapi import FastAPI
 from .routes.router import router as user_router
 from .routes.hr_router import router as hr_router
-from .database import engine
+from .database import init_db
 from .models import models
 
-models.Base.metadata.create_all(bind=engine)
+# Initialize database (creates tables if they don't exist)
+init_db()
 
 app = FastAPI(
     title="HR Management System",
@@ -14,6 +16,7 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# Include routers
 app.include_router(user_router, tags=["Users"])
 app.include_router(hr_router)
 

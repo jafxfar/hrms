@@ -1,7 +1,6 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from .config import settings
 
 SQLALCHEMY_DATABASE_URL = "postgresql://postgres:3535@localhost:5432/diplom"
 
@@ -16,3 +15,10 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def init_db():
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("Database initialized successfully")
+    except Exception as e:
+        print(f"Error initializing database: {e}")
