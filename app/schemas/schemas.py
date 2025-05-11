@@ -160,6 +160,10 @@ class Document(DocumentBase):
     class Config:
         from_attributes = True
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
 # Add this at the end of the file to resolve forward references
 Employee.model_rebuild()
 Document.model_rebuild()

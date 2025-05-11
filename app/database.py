@@ -2,6 +2,7 @@ from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+# SQLALCHEMY_DATABASE_URL = "postgresql://postgres:3535@localhost:5432/diplom"
 SQLALCHEMY_DATABASE_URL = "postgresql://diplom_tv4n_user:UKcJ8Tk9yNaw0XV4Vng4Be2rfuHk9xWW@dpg-d0g3e83uibrs73f7h7ig-a/diplom_tv4n"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
